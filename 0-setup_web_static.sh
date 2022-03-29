@@ -1,19 +1,30 @@
 #!/usr/bin/env bash
-# Sets up web servers for web_static
+# Sets up a web server for deployment of web_static.
+
+sudo apt-get -y upgrade
 sudo apt-get -y update
-sudo apt-get -y install nginx
-sudo mkdir -p /data/web_static/shared/
+sudo apt-get install -y nginx
+
 sudo mkdir -p /data/web_static/releases/test/
-echo "<!DOCTYPE html>
-<html>
-  <head>
-  </head>
-  <body>
-    Holberton School
-  </body>
-</html>" | sudo tee /data/web_static/releases/test/index.html
+sudo mkdir -p /data/web_static/shared/
+printf "<html>\n\t<head>\n\t</head>\n\t<body>\n\t\tHolberton School\n\t</body>\n</html>" > /data/web_static/releases/test/index.html
 sudo ln -sf /data/web_static/releases/test/ /data/web_static/current
-sudo chown -R ubuntu:ubuntu /data/
-sudo sed -i "51i\ \n\tlocation /hbnb_static {\n\t\talias /data/web_static/current/;}" /etc/nginx/sites-available/default
-sudo service nginx reload
-sudo service nginx restart
+
+sudo chown -R ubuntu /data/
+sudo chgrp -R ubuntu /data/
+
+printf %s "server {
+	listen 80;
+	listen [::]:80 default_server;
+	root /var/www/html;
+	index index.html index.htm index.nginx-debian.html;
+	add_header X-Served-By $hostname;
+	location /hbnb_static {
+		alias /data/web_static/current;
+		index 103-index.html;
+	}
+	rewrite ^/redirect_me https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;
+	error_page 404 /custom_404.html;
+}" > /etc/nginx/sites-available/default
+
+service nginx reload
