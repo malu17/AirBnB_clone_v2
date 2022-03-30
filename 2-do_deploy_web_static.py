@@ -1,49 +1,45 @@
 #!/usr/bin/python3
+"""Deploys the archive to the web servers"""
 from fabric.api import *
-from os.path import exists
 from datetime import datetime
-from fabric.api import local
+from os import path
+
 
 env.hosts = ['35.229.123.182', '34.138.250.25']
-
-
-def do_pack():
-    '''
-    Fabric script that generates a .tgz archive from the
-    contents of the web_static
-    '''
-    try:
-        filepath = 'versions/web_static_' + datetime.now().\
-                   strftime('%Y%m%d%H%M%S') + '.tgz'
-        local('mkdir -p versions')
-        local('tar -zcvf versions/web_static_$(date +%Y%m%d%H%M%S).tgz\
-        web_static')
-        print('web_static packed: {} -> {}'.
-              format(filepath, os.path.getsize(filepath)))
-    except:
-        return None
+env.user = 'ubuntu'
+env.key_filename = '~/.ssh/alx_id_rsa'
 
 
 def do_deploy(archive_path):
-        """
-        Depploy to yoru webs server
-    """
-        if exists(archive_path) is False:
-            return False
-        file_name = archive_path.split('/')[1]
-        file_path = '/data/web_static/releases'
+        """Deploys the archive file to the web servers"""
         try:
-            put(archive_path, '/tmp/')
-            run('mkdir -p {}{}'.format(file_path, file_name[:-4]))
-            run('tar -xzf /tmp/{} -C {}{}/'.format(file_name,
-                                                   file_path, file_name[:-4]))
-            run('rm /tmp/{}'.format(file_name))
-            run('mv {}{}/web_static/* {}{}/'.format(file_path, file_name[:-4],
-                                                    file_path, file_name[:-4]))
-            run('rm -rf {}{}/web_static'.format(file_path, file_name[:-4]))
-            run('rm -rf /data/web_static/current')
-            run('ln -s {}{}/ /data/web_static/current'.format(file_path,
-                                                              file_name[:-4]))
-            return True
+                if not (path.exists(archive_path)):
+                        return False
+
+                put(archive_path, '/tmp/')
+
+                timestamp = archive_path[-18:-4]
+                run('sudo mkdir -p /data/web_static/\
+releases/web_static_{}/'.format(timestamp))
+
+                run('sudo tar -xzf /tmp/web_static_{}.tgz -C \
+/data/web_static/releases/web_static_{}/'
+                    .format(timestamp, timestamp))
+
+                run('sudo rm /tmp/web_static_{}.tgz'.format(timestamp))
+
+                run('sudo mv /data/web_static/releases/web_static_{}/web_static/* \
+/data/web_static/releases/web_static_{}/'.format(timestamp, timestamp))
+
+                run('sudo rm -rf /data/web_static/releases/\
+web_static_{}/web_static'
+                    .format(timestamp))
+
+                run('sudo rm -rf /data/web_static/current')
+
+                run('sudo ln -s /data/web_static/releases/\
+web_static_{}/ /data/web_static/current'.format(timestamp))
         except:
-            return False
+                return False
+
+        return True
