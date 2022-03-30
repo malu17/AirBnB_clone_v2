@@ -5,7 +5,7 @@ from datetime import datetime
 from os import path
 
 
-env.hosts = ['35.229.123.182', '34.138.250.25']
+env.hosts = ['35.229.123.182', '3.236.77.90']
 env.user = 'ubuntu'
 env.key_filename = '~/.ssh/alx_id_rsa'
 
