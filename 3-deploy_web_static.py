@@ -65,3 +65,4 @@ web_static_{}/ /data/web_static/current'.format(timestamp))
 def deploy():
         """Deploys the web static"""
         return do_deploy(do_pack())
+i
